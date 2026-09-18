@@ -1,0 +1,38 @@
+// Prisma schema for the Shipment Status Tracker
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Shipment {
+  id                   Int             @id @default(autoincrement())
+  referenceNumber      String          @unique
+  origin               String
+  destination          String
+  currentStatus        String          @default("BOOKED")
+  expectedDeliveryDate DateTime
+  carrier              String?
+  notes                String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  statusHistory        StatusHistory[]
+
+  @@index([currentStatus])
+}
+
+model StatusHistory {
+  id         Int            @id @default(autoincrement())
+  shipmentId Int
+  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     String
+  note       String?
+  changedAt  DateTime       @default(now())
+
+  @@index([shipmentId])
+}
