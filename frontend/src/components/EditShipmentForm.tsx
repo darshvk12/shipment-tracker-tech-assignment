@@ -57,11 +57,21 @@ export function EditShipmentForm({ shipment, onUpdated, onClose }: Props) {
           <div className="form-row">
             <label>
               Origin *
-              <input value={origin} onChange={(e) => setOrigin(e.target.value)} required />
+              <input 
+                value={origin} 
+                onChange={(e) => setOrigin(e.target.value)} 
+                placeholder="e.g. New York, USA"
+                required 
+              />
             </label>
             <label>
               Destination *
-              <input value={destination} onChange={(e) => setDestination(e.target.value)} required />
+              <input 
+                value={destination} 
+                onChange={(e) => setDestination(e.target.value)} 
+                placeholder="e.g. London, UK"
+                required 
+              />
             </label>
           </div>
           <div className="form-row">
