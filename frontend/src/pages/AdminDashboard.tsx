@@ -6,6 +6,7 @@ import { CreateShipmentForm } from "../components/CreateShipmentForm";
 import { ShipmentDetail } from "../components/ShipmentDetail";
 import { EditShipmentForm } from "../components/EditShipmentForm";
 import { ToastContainer, ToastMessage, ToastType } from "../components/Toast";
+import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
 
 export function AdminDashboard() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -92,6 +93,10 @@ export function AdminDashboard() {
           ))}
         </select>
       </div>
+
+      {!loading && shipments.length > 0 && (
+        <AnalyticsDashboard shipments={shipments} />
+      )}
 
       {error && <div className="error">{error}</div>}
       {loading && <p className="muted">Loading shipments…</p>}
