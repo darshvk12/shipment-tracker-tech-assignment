@@ -13,12 +13,11 @@ const COLORS: Record<string, string> = {
   CUSTOMS_HOLD: "#f59e0b", // Amber
   OUT_FOR_DELIVERY: "#a855f7", // Purple
   DELIVERED: "#10b981", // Emerald
-  EXCEPTION: "#ef4444" // Red
 };
 
 export function AnalyticsDashboard({ shipments, onViewAll }: AnalyticsDashboardProps) {
   const metrics = useMemo(() => {
-    let total = 0, active = 0, delivered = 0, exceptions = 0;
+    let total = 0, active = 0, delivered = 0;
     const statusData: Record<string, number> = {};
     const destinationData: Record<string, number> = {};
     const creationMap = new Map();
@@ -34,7 +33,6 @@ export function AnalyticsDashboard({ shipments, onViewAll }: AnalyticsDashboardP
 
     shipments.forEach(s => {
       if (s.currentStatus === 'DELIVERED') delivered++;
-      else if (s.currentStatus === 'EXCEPTION') exceptions++;
       else active++;
       
       total++;
@@ -88,7 +86,6 @@ export function AnalyticsDashboard({ shipments, onViewAll }: AnalyticsDashboardP
       total, 
       active, 
       delivered, 
-      exceptions, 
       statusData: mappedStatusData, 
       destinationData: mappedDestinationData, 
       expectedTimeline, 
@@ -113,10 +110,6 @@ export function AnalyticsDashboard({ shipments, onViewAll }: AnalyticsDashboardP
         <div className="metric-card">
           <div className="metric-title">Completed</div>
           <div className="metric-value" style={{ color: "#10b981" }}>{metrics.delivered}</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-title">Issues / Holds</div>
-          <div className="metric-value" style={{ color: "#ef4444" }}>{metrics.exceptions}</div>
         </div>
       </div>
 
