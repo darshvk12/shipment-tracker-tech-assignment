@@ -56,6 +56,9 @@ export function ShipmentDetail({ shipmentId, onClose, onUpdated, onDeleted }: Pr
       const updated = await updateShipmentStatus(shipment.id, newStatus, note || undefined);
       setShipment(updated);
       setNote("");
+      // Reset newStatus to the first valid option for the newly updated status!
+      const nextStatuses = AVAILABLE_NEXT_STATUSES[updated.currentStatus] || [];
+      setNewStatus(nextStatuses.length > 0 ? nextStatuses[0] : updated.currentStatus);
       onUpdated(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");
@@ -97,7 +100,7 @@ export function ShipmentDetail({ shipmentId, onClose, onUpdated, onDeleted }: Pr
             {(AVAILABLE_NEXT_STATUSES[shipment.currentStatus] || []).length > 0 && (
               <>
                 <h3>Update status</h3>
-                <div className="form-row">
+                <div className="form-row" style={{ flexWrap: "wrap" }}>
                   <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as ShipmentStatus)}>
                     {AVAILABLE_NEXT_STATUSES[shipment.currentStatus].map((s) => (
                       <option key={s} value={s}>

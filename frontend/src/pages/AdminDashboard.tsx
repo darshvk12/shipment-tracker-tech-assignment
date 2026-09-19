@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { fetchShipments, ShipmentFilters, deleteShipment } from "../api";
 import { Shipment, STATUS_LABELS, STATUS_VALUES } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
@@ -11,6 +13,7 @@ import { ToastContainer, ToastMessage, ToastType } from "../components/Toast";
 import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
 
 export function AdminDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +22,8 @@ export function AdminDashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "shipments">("overview");
+  const activeTab = searchParams.get("tab") === "shipments" ? "shipments" : "overview";
+  const setActiveTab = (tab: "overview" | "shipments") => setSearchParams({ tab });
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("oldest");
   const [timeRange, setTimeRange] = useState<"Today" | "7D" | "30D" | "ALL" | "CUSTOM">("ALL");
   const [customStart, setCustomStart] = useState("");
@@ -135,18 +139,34 @@ export function AdminDashboard() {
     }
   };
 
-  const exportTableToPDF = async () => {
+  const exportTableToPDF = () => {
     setIsExportingTable(true);
-    showToast("Generating Table PDF...", "success");
     try {
-      const element = document.getElementById("table-export-target");
-      if (!element) throw new Error("Table not found");
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("l", "mm", "a4"); 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      
+      const headers = [["Reference", "Origin", "Destination", "Status", "Expected Delivery", "Updated"]];
+      const data = sortedShipments.map(s => [
+        s.referenceNumber,
+        s.origin,
+        s.destination,
+        s.currentStatus,
+        new Date(s.expectedDeliveryDate).toLocaleDateString(),
+        new Date(s.updatedAt).toLocaleString() // include date and time
+      ]);
+      
+      // Add a simple title on the first page
+      pdf.setFontSize(16);
+      pdf.text("Shipments List", 14, 15);
+
+      autoTable(pdf, {
+        head: headers,
+        body: data,
+        startY: 20,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [59, 130, 246] }, // blue-500
+        margin: { top: 20 },
+      });
+
       pdf.save("Shipments_List.pdf");
       showToast("PDF downloaded successfully");
     } catch (err) {

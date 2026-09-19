@@ -12,10 +12,20 @@ export function Layout() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <nav style={{ background: "#ffffff", padding: "16px 32px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link to="/" style={{ textDecoration: "none", color: "#1e293b", fontWeight: 700, fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ background: "#3b82f6", color: "white", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>N</div>
-          Nagarkot Forwarders
+      <nav style={{ 
+        background: "rgba(255, 255, 255, 0.9)", 
+        backdropFilter: "blur(12px)",
+        padding: "16px 32px", 
+        borderBottom: "1px solid #e2e8f0", 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        position: "sticky",
+        top: 0,
+        zIndex: 50
+      }}>
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1e293b" }}>Nagarkot Forwarders Pvt Ltd</span>
         </Link>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
           <Link to="/" style={{ textDecoration: "none", color: location.pathname === "/" ? "#3b82f6" : "#64748b", fontWeight: 600 }}>Track Shipment</Link>
@@ -32,6 +42,7 @@ export function Layout() {
       <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Outlet />
       </main>
+
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function PublicTracker() {
           <input
             className="search-input"
             style={{ flex: 1, padding: "12px 16px", fontSize: "1.1rem" }}
-            placeholder="Enter your reference number (e.g., NGK-2026-0001)"
+            placeholder="e.g. NGK-2026-0001"
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             required

@@ -1,43 +1,62 @@
-# Shipment Status Tracker
+# Shipment Status Tracker - Nagarkot Forwarders
 
-A robust, full-stack application built for tracking shipments through their lifecycle.
+A full-stack application built for Nagarkot Forwarders Pvt. Ltd. to track shipments as they move through their lifecycle. 
 
-## Links
-- **GitHub Repository**: [Insert Link Here]
-- **Frontend Deployment (Vercel)**: [Insert Link Here]
-- **Backend Deployment (Render/Railway)**: [Insert Link Here]
+## 🚀 Tech Choices & Why
 
-## 1. Tech Choices and Why
+**Frontend:** React (TypeScript) + Vite
+- *Why:* React provides a robust component-based architecture perfect for dynamic dashboards. Vite was chosen over Create React App for its incredibly fast HMR and optimized build process. TypeScript ensures type safety across props and state.
 
-- **Frontend**: **React (via Vite)** and **TypeScript**. React provides a predictable, component-driven UI that is highly performant for complex dashboards. Vite was chosen over Create React App or Next.js to provide an extremely fast, lightweight development environment while still strictly satisfying the recommendation for React. I utilized pure CSS (glassmorphism UI) over UI libraries to demonstrate raw styling capability and reduce bundle size.
-- **Backend**: **Express (Node.js)** with **TypeScript**. Express is the industry standard for lightweight, unopinionated Node servers. TypeScript ensures the `Shipment` interfaces are completely synchronized between the client and server.
-- **Database**: **PostgreSQL** via **Prisma ORM**. PostgreSQL is a robust relational database (matching the preferred stack). Prisma provides a completely type-safe query builder that prevents SQL injection and makes database migrations effortless.
-- **Analytics**: **Recharts**. Used to build the "Executive Dashboard" which provides real-time business intelligence (Donut charts, Bar charts, Area charts) natively mapped to our React state.
+**Backend:** Node.js + Express (TypeScript)
+- *Why:* Express is lightweight, unopinionated, and industry-standard. Pairing it with TypeScript ensures our API contracts (like the shipment status strings) are strictly enforced before runtime.
 
-## 2. Running Locally
+**Database:** PostgreSQL + Prisma ORM
+- *Why:* Postgres is the gold standard for relational data. Prisma was chosen for its unparalleled developer experience and end-to-end type safety, which pairs perfectly with our TypeScript stack. It makes schema migrations and relational queries (like fetching a shipment's history) trivial and safe.
 
-**Prerequisites:**
+**Styling:** Pure CSS (Custom Design System)
+- *Why:* To demonstrate a strong grasp of CSS fundamentals (Flexbox, CSS Variables, responsive media queries) without relying on heavyweight libraries like Tailwind or Bootstrap. The UI is custom-tailored to be professional, sleek, and responsive.
+
+## 🛠️ How to Run Locally
+
+### Prerequisites
 - Node.js (v18+)
-- A PostgreSQL Database (Local or Neon/Supabase)
+- PostgreSQL (or you can use the provided Neon DB string)
 
-**Backend Setup:**
-1. Navigate to the backend: `cd backend`
-2. Install dependencies: `npm install`
-3. Add your database URL: Create a `.env` file based on `.env.example` and set `DATABASE_URL`.
-4. Push the schema: `npx prisma db push`
-5. Start the server: `npm run dev` (Runs on port 4000)
+### 1. Setup Backend
+```bash
+cd backend
+npm install
 
-**Frontend Setup:**
-1. Navigate to the frontend: `cd frontend`
-2. Install dependencies: `npm install`
-3. Start the Vite server: `npm run dev` (Runs on port 5173)
+# Set up your environment variables
+# Create a .env file and add your DATABASE_URL (or use the one provided)
+# DATABASE_URL="postgresql://..."
 
-## 3. Assumptions Made
+# Run database migrations and seed mock data
+npx prisma db push
+npm run seed
 
-- **Status Flow**: I assumed shipments generally move linearly (`BOOKED` -> `IN_TRANSIT` -> `OUT_FOR_DELIVERY` -> `DELIVERED`), but can jump to `CUSTOMS_HOLD` or `EXCEPTION` at any point. The tracking timeline UI accounts for this by dynamically rendering current/past states while "projecting" unreached future states.
-- **History Auditing**: I assumed that business operations require an immutable audit trail. Thus, `StatusHistory` is a separate relational table that logs every state change and every manual edit (via the UI) rather than just storing a single "current status" string.
-- **Reference Numbers**: I assumed human-readable tracking numbers are better for UX than UUIDs, so the system auto-generates smart references like `NGK-2026-8291` while still allowing users to input their own.
+# Start the development server
+npm run dev
+```
+*The backend will run on http://localhost:4000*
 
-## 4. Scaling to 10,000+ Shipments and Concurrent Users
+### 2. Setup Frontend
+Open a new terminal window:
+```bash
+cd frontend
+npm install
 
-If this needed to support 10,000 shipments and multiple concurrent users, I would implement cursor-based pagination on the `GET /api/shipments` endpoint to prevent massive payloads from degrading the frontend dashboard. I would wrap state-changing database operations (like moving a shipment to `DELIVERED`) in strict Prisma transactions to prevent race conditions from concurrent updates. To maintain sub-millisecond search speeds in the UI, I would add a PostgreSQL full-text index on the `referenceNumber` and `origin`/`destination` columns. Finally, for a true real-time dashboard, I would introduce WebSocket connections (or Server-Sent Events) so the analytics UI updates instantly across all active users when a shipment changes state, rather than relying on manual page reloads.
+# Start the frontend development server
+npm run dev
+```
+*The frontend will run on http://localhost:5173*
+
+## 🧠 Assumptions & Design Decisions
+
+1. **Status State Machine:** I assumed shipments must follow a strictly linear progression (`BOOKED` -> `IN_TRANSIT` -> `OUT_FOR_DELIVERY` -> `DELIVERED`), with the exception of `RETURN_DUE_TO_CUSTOMER` which cycles back to `OUT_FOR_DELIVERY`. The backend enforces this state machine and prevents invalid leaps (e.g., jumping from `BOOKED` directly to `DELIVERED`).
+2. **History Tracking:** Rather than mutating a single status field, I assumed an audit trail was critical for logistics. I implemented a `StatusHistory` table in Postgres that logs every state change with timestamps and optional notes, which powers the visual tracking timeline.
+3. **Mock Authentication:** The prompt explicitly marked authentication as out-of-scope. I built a functional UI "facade" for the Admin Portal to separate public tracking from admin management, but it purposely does not implement complex backend JWTs/sessions to respect the time box.
+
+## 📈 Scaling to 10,000 Shipments & Multiple Users
+
+If this needed to support 10,000 active shipments and concurrent users, I would introduce database indexing on frequently queried fields like `referenceNumber` and `currentStatus` to maintain fast read speeds. I would replace the client-side sorting/filtering on the frontend with server-side pagination and offset-based SQL queries to prevent overloading the browser's memory. For high concurrency, I'd implement optimistic UI updates backed by Redis caching on the server to reduce direct Postgres hits, and wrap status updates in strict database transactions with row-level locking to prevent race conditions when two dispatchers try to update the same shipment simultaneously.

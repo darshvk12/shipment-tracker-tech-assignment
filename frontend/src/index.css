@@ -748,6 +748,10 @@ textarea {
   padding: 32px 24px;
   box-shadow: 1px 0 15px rgba(0,0,0,0.02);
   z-index: 10;
+  position: sticky;
+  top: 65px;
+  max-height: calc(100vh - 65px);
+  overflow-y: auto;
 }
 
 .sidebar-brand {
@@ -812,8 +816,6 @@ textarea {
 .main-content {
   flex: 1;
   padding: 48px;
-  overflow-y: auto;
-  max-height: 100vh;
 }
 
 .main-header {

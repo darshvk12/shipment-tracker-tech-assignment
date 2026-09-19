@@ -31,7 +31,6 @@ export function Login() {
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
       <div style={{ background: "white", padding: "48px", borderRadius: "16px", boxShadow: "0 10px 25px rgba(0,0,0,0.05)", width: "100%", maxWidth: "400px" }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ background: "#3b82f6", color: "white", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "1.5rem", margin: "0 auto 16px" }}>N</div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>Admin Portal</h1>
           <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "16px" }}>Sign in to manage shipments</p>
           <div style={{ background: "#f1f5f9", padding: "12px", borderRadius: "8px", fontSize: "0.85rem", color: "#475569", border: "1px dashed #cbd5e1" }}>
