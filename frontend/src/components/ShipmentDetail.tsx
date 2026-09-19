@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Package, Truck, Clock, AlertTriangle, ArrowLeft, RefreshCw, Printer } from "lucide-react";
+import { formatDate } from "../utils";
 import { fetchShipment, updateShipmentStatus, deleteShipment } from "../api";
 import { Shipment, ShipmentStatus, STATUS_LABELS, STATUS_VALUES, AVAILABLE_NEXT_STATUSES } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -89,8 +91,8 @@ export function ShipmentDetail({ shipmentId, onClose, onUpdated, onDeleted }: Pr
             </div>
 
             <dl className="detail-grid">
-              <dt>Expected delivery</dt>
-              <dd>{new Date(shipment.expectedDeliveryDate).toLocaleDateString()}</dd>
+              <dt>Expected Delivery</dt>
+              <dd>{formatDate(shipment.expectedDeliveryDate)}</dd>
               <dt>Carrier</dt>
               <dd>{shipment.carrier || "—"}</dd>
               <dt>Notes</dt>

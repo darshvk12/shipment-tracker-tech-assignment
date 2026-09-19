@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { fetchShipmentByReference } from "../api";
 import { Shipment } from "../types";
+import { formatDate } from "../utils";
 import { TrackingTimeline } from "../components/TrackingTimeline";
 
 export function PublicTracker() {
@@ -62,7 +63,7 @@ export function PublicTracker() {
               </div>
               <div>
                 <span className="muted" style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px" }}>Expected Delivery</span>
-                <strong>{new Date(shipment.expectedDeliveryDate).toLocaleDateString()}</strong>
+                <strong>{formatDate(shipment.expectedDeliveryDate)}</strong>
               </div>
               <div>
                 <span className="muted" style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px" }}>Origin</span>

@@ -11,6 +11,7 @@ import { ShipmentDetail } from "../components/ShipmentDetail";
 import { EditShipmentForm } from "../components/EditShipmentForm";
 import { ToastContainer, ToastMessage, ToastType } from "../components/Toast";
 import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
+import { formatDate } from "../utils";
 
 export function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -150,8 +151,8 @@ export function AdminDashboard() {
         s.origin,
         s.destination,
         s.currentStatus,
-        new Date(s.expectedDeliveryDate).toLocaleDateString(),
-        new Date(s.updatedAt).toLocaleString() // include date and time
+        formatDate(s.expectedDeliveryDate),
+        formatDate(s.updatedAt)
       ]);
       
       // Add a simple title on the first page
@@ -179,22 +180,14 @@ export function AdminDashboard() {
 
   const exportTableToCSV = () => {
     try {
-      const formatDateCSV = (dateString: string | Date) => {
-        const d = new Date(dateString);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        return `${year}-${month}-${day}`;
-      };
-
       const headers = ["Reference", "Origin", "Destination", "Status", "Expected Delivery", "Updated"];
       const rows = sortedShipments.map(s => [
         s.referenceNumber,
         `"${s.origin}"`,
         `"${s.destination}"`,
         s.currentStatus,
-        formatDateCSV(s.expectedDeliveryDate),
-        formatDateCSV(s.updatedAt)
+        formatDate(s.expectedDeliveryDate),
+        formatDate(s.updatedAt)
       ]);
       
       const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -384,9 +377,9 @@ export function AdminDashboard() {
                   <td>
                     <StatusBadge status={s.currentStatus} />
                   </td>
-                  <td>{new Date(s.expectedDeliveryDate).toLocaleDateString()}</td>
+                  <td>{formatDate(s.expectedDeliveryDate)}</td>
                   <td>
-                    {new Date(s.updatedAt).toLocaleDateString()}{" "}
+                    {formatDate(s.updatedAt)}{" "}
                     <span className="muted">{new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </td>
                   <td style={{ textAlign: "right" }}>
