@@ -179,14 +179,22 @@ export function AdminDashboard() {
 
   const exportTableToCSV = () => {
     try {
+      const formatDateCSV = (dateString: string | Date) => {
+        const d = new Date(dateString);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${year}-${month}-${day}`;
+      };
+
       const headers = ["Reference", "Origin", "Destination", "Status", "Expected Delivery", "Updated"];
       const rows = sortedShipments.map(s => [
         s.referenceNumber,
         `"${s.origin}"`,
         `"${s.destination}"`,
         s.currentStatus,
-        new Date(s.expectedDeliveryDate).toLocaleDateString(),
-        new Date(s.updatedAt).toLocaleDateString()
+        formatDateCSV(s.expectedDeliveryDate),
+        formatDateCSV(s.updatedAt)
       ]);
       
       const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
