@@ -36,3 +36,10 @@ model StatusHistory {
 
   @@index([shipmentId])
 }
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
