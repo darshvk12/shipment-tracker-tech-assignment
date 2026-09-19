@@ -79,9 +79,12 @@ export function AdminDashboard() {
 
   // Client-side sorting for the table
   const sortedShipments = [...shipments].sort((a, b) => {
-    const timeA = new Date(a.updatedAt).getTime();
-    const timeB = new Date(b.updatedAt).getTime();
-    return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
+    // Sort by referenceNumber (e.g., NGK-2026-0001)
+    // Oldest first = ascending order (0001, 0002, 0003)
+    // Newest first = descending order (0003, 0002, 0001)
+    return sortOrder === "oldest" 
+      ? a.referenceNumber.localeCompare(b.referenceNumber)
+      : b.referenceNumber.localeCompare(a.referenceNumber);
   });
 
   // Client-side date filtering for Analytics

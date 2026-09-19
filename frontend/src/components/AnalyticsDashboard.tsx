@@ -141,7 +141,6 @@ export function AnalyticsDashboard({ shipments, onViewAll }: AnalyticsDashboardP
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any) => [`${value} shipments`, 'Count']}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                 />
               </PieChart>
