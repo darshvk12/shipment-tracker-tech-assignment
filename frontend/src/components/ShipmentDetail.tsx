@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchShipment, updateShipmentStatus, deleteShipment } from "../api";
-import { Shipment, ShipmentStatus, STATUS_LABELS, STATUS_VALUES } from "../types";
+import { Shipment, ShipmentStatus, STATUS_LABELS, STATUS_VALUES, AVAILABLE_NEXT_STATUSES } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { TrackingTimeline } from "./TrackingTimeline";
 import { EditShipmentForm } from "./EditShipmentForm";
@@ -38,7 +38,8 @@ export function ShipmentDetail({ shipmentId, onClose, onUpdated, onDeleted }: Pr
       .then((s) => {
         if (cancelled) return;
         setShipment(s);
-        setNewStatus(s.currentStatus === "OUT_FOR_DELIVERY" ? "DELIVERED" : s.currentStatus);
+        const nextStatuses = AVAILABLE_NEXT_STATUSES[s.currentStatus] || [];
+        setNewStatus(nextStatuses.length > 0 ? nextStatuses[0] : s.currentStatus);
       })
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setLoading(false));
@@ -93,25 +94,29 @@ export function ShipmentDetail({ shipmentId, onClose, onUpdated, onDeleted }: Pr
               <dd>{shipment.notes || "—"}</dd>
             </dl>
 
-            <h3>Update status</h3>
-            <div className="form-row">
-              <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as ShipmentStatus)}>
-                {(shipment.currentStatus === "OUT_FOR_DELIVERY" ? ["DELIVERED" as ShipmentStatus] : STATUS_VALUES).map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-              <input
-                placeholder="optional note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
-              <button className="btn-primary" onClick={handleUpdateStatus} disabled={submitting}>
-                {submitting ? "Saving…" : "Update"}
-              </button>
-            </div>
-            {error && <div className="error">{error}</div>}
+            {(AVAILABLE_NEXT_STATUSES[shipment.currentStatus] || []).length > 0 && (
+              <>
+                <h3>Update status</h3>
+                <div className="form-row">
+                  <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as ShipmentStatus)}>
+                    {AVAILABLE_NEXT_STATUSES[shipment.currentStatus].map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    placeholder="optional note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                  <button className="btn-primary" onClick={handleUpdateStatus} disabled={submitting}>
+                    {submitting ? "Saving…" : "Update"}
+                  </button>
+                </div>
+                {error && <div className="error">{error}</div>}
+              </>
+            )}
 
             <h3>History</h3>
             <TrackingTimeline shipment={shipment} />

@@ -5,10 +5,9 @@ import { Prisma } from "@prisma/client";
 export const ShipmentStatus = {
   BOOKED: "BOOKED",
   IN_TRANSIT: "IN_TRANSIT",
-  CUSTOMS_HOLD: "CUSTOMS_HOLD",
   OUT_FOR_DELIVERY: "OUT_FOR_DELIVERY",
+  RETURN_DUE_TO_CUSTOMER: "RETURN_DUE_TO_CUSTOMER",
   DELIVERED: "DELIVERED",
-  EXCEPTION: "EXCEPTION",
 } as const;
 
 export type ShipmentStatus = typeof ShipmentStatus[keyof typeof ShipmentStatus];
@@ -181,6 +180,29 @@ router.patch("/:id/status", async (req: Request, res: Response) => {
   const { status, note } = parsed.data;
 
   try {
+    const currentShipment = await prisma.shipment.findUnique({ where: { id } });
+    if (!currentShipment) {
+      return res.status(404).json({ error: "Shipment not found" });
+    }
+
+    const AVAILABLE_NEXT_STATUSES: Record<string, string[]> = {
+      BOOKED: ["IN_TRANSIT"],
+      IN_TRANSIT: ["OUT_FOR_DELIVERY"],
+      OUT_FOR_DELIVERY: ["DELIVERED", "RETURN_DUE_TO_CUSTOMER"],
+      RETURN_DUE_TO_CUSTOMER: ["OUT_FOR_DELIVERY"],
+      DELIVERED: [],
+    };
+
+    const allowedNextStatuses = AVAILABLE_NEXT_STATUSES[currentShipment.currentStatus] || [];
+    
+    if (allowedNextStatuses.length === 0) {
+      return res.status(400).json({ error: "Cannot update status of a finalized shipment" });
+    }
+
+    if (!allowedNextStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status progression from ${currentShipment.currentStatus} to ${status}` });
+    }
+
     const [, shipment] = await prisma.$transaction([
       prisma.statusHistory.create({
         data: { shipmentId: id, status: status as ShipmentStatus, note },

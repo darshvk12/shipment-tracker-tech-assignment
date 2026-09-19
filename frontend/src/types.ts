@@ -1,10 +1,9 @@
 export const STATUS_VALUES = [
   "BOOKED",
   "IN_TRANSIT",
-  "CUSTOMS_HOLD",
   "OUT_FOR_DELIVERY",
+  "RETURN_DUE_TO_CUSTOMER",
   "DELIVERED",
-  "EXCEPTION",
 ] as const;
 
 export type ShipmentStatus = (typeof STATUS_VALUES)[number];
@@ -12,10 +11,17 @@ export type ShipmentStatus = (typeof STATUS_VALUES)[number];
 export const STATUS_LABELS: Record<ShipmentStatus, string> = {
   BOOKED: "Booked",
   IN_TRANSIT: "In Transit",
-  CUSTOMS_HOLD: "Customs Hold",
   OUT_FOR_DELIVERY: "Out for Delivery",
+  RETURN_DUE_TO_CUSTOMER: "Return (Customer Unavailable)",
   DELIVERED: "Delivered",
-  EXCEPTION: "Exception",
+};
+
+export const AVAILABLE_NEXT_STATUSES: Record<ShipmentStatus, ShipmentStatus[]> = {
+  BOOKED: ["IN_TRANSIT"],
+  IN_TRANSIT: ["OUT_FOR_DELIVERY"],
+  OUT_FOR_DELIVERY: ["DELIVERED", "RETURN_DUE_TO_CUSTOMER"],
+  RETURN_DUE_TO_CUSTOMER: ["OUT_FOR_DELIVERY"],
+  DELIVERED: [],
 };
 
 export interface StatusHistoryEntry {
