@@ -1,62 +1,84 @@
-# Shipment Status Tracker - Nagarkot Forwarders
+Shipment Status Tracker - Nagarkot Forwarders
 
-A full-stack application built for Nagarkot Forwarders Pvt. Ltd. to track shipments as they move through their lifecycle. 
+A full-stack application built for Nagarkot Forwarders Pvt. Ltd. to track shipments as they move through their lifecycle — from booking to delivery, with a full status history and a public tracking view.
 
-## 🚀 Tech Choices & Why
+Tech Choices & Why
 
-**Frontend:** React (TypeScript) + Vite
-- *Why:* React provides a robust component-based architecture perfect for dynamic dashboards. Vite was chosen over Create React App for its incredibly fast HMR and optimized build process. TypeScript ensures type safety across props and state.
+Frontend: React (TypeScript) + Vite
 
-**Backend:** Node.js + Express (TypeScript)
-- *Why:* Express is lightweight, unopinionated, and industry-standard. Pairing it with TypeScript ensures our API contracts (like the shipment status strings) are strictly enforced before runtime.
+Why: React's component model fits a dashboard with several distinct views (public tracker, admin list, shipment detail) well. Vite over Create React App for faster HMR and a simpler build pipeline. TypeScript keeps props, API responses, and status values consistent across components.
+Routing: react-router-dom — used to separate the public tracking page (/) from the admin area (/admin) as distinct routes rather than conditionally rendered state, so each has its own URL and the admin area can be gated behind a route guard.
+Charts: recharts — used for a small analytics view (shipments by status, volume over time) in the admin dashboard. This is beyond the core requirements; I added it because a status tracker without any at-a-glance view of how many shipments are in each state felt incomplete, not because it was asked for.
+PDF export: jspdf / jspdf-autotable — lets an admin export the current shipment list as a PDF, a common real-world ask for logistics ops. Also beyond the core requirements, included as a small extra rather than a required feature.
 
-**Database:** PostgreSQL + Prisma ORM
-- *Why:* Postgres is the gold standard for relational data. Prisma was chosen for its unparalleled developer experience and end-to-end type safety, which pairs perfectly with our TypeScript stack. It makes schema migrations and relational queries (like fetching a shipment's history) trivial and safe.
+Backend: Node.js + Express (TypeScript)
 
-**Styling:** Pure CSS (Custom Design System)
-- *Why:* To demonstrate a strong grasp of CSS fundamentals (Flexbox, CSS Variables, responsive media queries) without relying on heavyweight libraries like Tailwind or Bootstrap. The UI is custom-tailored to be professional, sleek, and responsive.
+Why: Express is lightweight and unopinionated, appropriate for the size of this API (a handful of REST routes). I considered NestJS for its structure, but for five-ish endpoints the extra layering (modules, DI, decorators) would add more ceremony than value here — I'd reach for it if this were expected to grow into a larger service.
 
-## 🛠️ How to Run Locally
+Database: PostgreSQL + Prisma ORM
 
-### Prerequisites
-- Node.js (v18+)
-- PostgreSQL (or you can use the provided Neon DB string)
+Why: Postgres because the brief calls it out as reflecting the team's stack. I considered SQLite for zero-setup local development, but went with Postgres directly so local dev matches production and I'm not deferring a migration risk to later. Prisma gives type-safe queries and straightforward migrations, and models the status-history relationship (one shipment → many history rows) cleanly as a proper foreign-key relation rather than a JSON blob or string log.
 
-### 1. Setup Backend
-```bash
+Styling: Pure CSS (Custom Design System)
+
+Why: To demonstrate CSS fundamentals (Flexbox, CSS variables, responsive layout) directly, without a utility framework. Kept deliberately simple and consistent rather than heavily themed.
+How to Run Locally
+Prerequisites
+Node.js v18+
+A PostgreSQL database — either install Postgres locally, or use the bundled docker-compose.yml, which starts just a Postgres container (no app containers):
+bash
+  docker compose up -d
+1. Backend
+bash
 cd backend
 npm install
 
-# Set up your environment variables
-# Create a .env file and add your DATABASE_URL (or use the one provided)
-# DATABASE_URL="postgresql://..."
+cp .env.example .env
+# Edit .env and set DATABASE_URL, e.g.:
+# DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shipment_tracker?schema=public"
 
-# Run database migrations and seed mock data
+# Apply the schema
 npx prisma db push
-npm run seed
 
-# Start the development server
+# Seed sample shipments (optional, but recommended to see the app populated)
+npx tsx prisma/seed.ts
+
+# Start the dev server
 npm run dev
-```
-*The backend will run on http://localhost:4000*
 
-### 2. Setup Frontend
-Open a new terminal window:
-```bash
+The backend runs on http://localhost:4000.
+
+2. Frontend
+
+Open a new terminal:
+
+bash
 cd frontend
 npm install
 
-# Start the frontend development server
+cp .env.example .env
+# VITE_API_URL defaults to http://localhost:4000 — update it if your backend runs elsewhere,
+# and again when pointing at a deployed backend.
+
 npm run dev
-```
-*The frontend will run on http://localhost:5173*
 
-## 🧠 Assumptions & Design Decisions
+The frontend runs on http://localhost:5173.
 
-1. **Status State Machine:** I assumed shipments must follow a strictly linear progression (`BOOKED` -> `IN_TRANSIT` -> `OUT_FOR_DELIVERY` -> `DELIVERED`), with the exception of `RETURN_DUE_TO_CUSTOMER` which cycles back to `OUT_FOR_DELIVERY`. The backend enforces this state machine and prevents invalid leaps (e.g., jumping from `BOOKED` directly to `DELIVERED`).
-2. **History Tracking:** Rather than mutating a single status field, I assumed an audit trail was critical for logistics. I implemented a `StatusHistory` table in Postgres that logs every state change with timestamps and optional notes, which powers the visual tracking timeline.
-3. **Mock Authentication:** The prompt explicitly marked authentication as out-of-scope. I built a functional UI "facade" for the Admin Portal to separate public tracking from admin management, but it purposely does not implement complex backend JWTs/sessions to respect the time box.
+Demo admin login
 
-## 📈 Scaling to 10,000 Shipments & Multiple Users
+The backend seeds a default admin user on first run (admin / password123) so the admin area is reachable without any extra setup. See the note on authentication below — this is a UI facade, not real auth.
 
-If this needed to support 10,000 active shipments and concurrent users, I would introduce database indexing on frequently queried fields like `referenceNumber` and `currentStatus` to maintain fast read speeds. I would replace the client-side sorting/filtering on the frontend with server-side pagination and offset-based SQL queries to prevent overloading the browser's memory. For high concurrency, I'd implement optimistic UI updates backed by Redis caching on the server to reduce direct Postgres hits, and wrap status updates in strict database transactions with row-level locking to prevent race conditions when two dispatchers try to update the same shipment simultaneously.
+Assumptions & Design Decisions
+Status state machine. I assumed shipments follow a defined, mostly-linear progression (BOOKED → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED), with one cyclical exception — RETURN_DUE_TO_CUSTOMER, which loops back to OUT_FOR_DELIVERY for a redelivery attempt. The backend enforces this and rejects invalid jumps (e.g. BOOKED straight to DELIVERED). I made this assumption because unconstrained status changes felt like it would under-model how shipments actually move in practice; a real implementation would confirm this flow with ops before enforcing it this strictly.
+History as its own table, not a status log or JSON field. Every status change — including the initial one at creation — writes a StatusHistory row with a timestamp and optional note, so the timeline always reflects the complete lifecycle and can be queried/ordered directly.
+Public tracker + admin area, not a single unified view. I assumed two audiences: someone tracking one shipment by reference number (no login), and staff managing the full list, creating shipments, and updating statuses (admin area). This is a design choice beyond the brief's minimum, made to keep "view a shipment's status" and "manage shipments" as clearly separate concerns.
+Mock authentication. The brief explicitly marks auth as out of scope. I still built a UI "facade" — a login screen and a route guard — to separate the public tracker from admin management conceptually, but it's intentionally shallow: no hashing, no JWTs/sessions, no real security boundary. Anyone can inspect the API directly and call the admin endpoints without logging in. It exists to make the demo feel coherent, not as a security feature, and I would not consider it acceptable in anything beyond this exercise.
+referenceNumber is the human-facing identifier and is unique; the internal id is used only for routing.
+Search matches reference number, origin, or destination, case-insensitive substring match — the brief calls out status and reference number specifically; I extended it to origin/destination since it was a low-cost, natural addition on the same query.
+Scaling to 10,000 Shipments & Multiple Concurrent Users
+
+At that scale, the risk isn't raw row count — Postgres handles 10,000 rows trivially — it's query shape and concurrent writes. I'd add indexes on the columns actually filtered and sorted on (referenceNumber, currentStatus, updatedAt), and replace the current "load everything, filter in memory" approach with server-side, cursor- or offset-based pagination so the list endpoint and the browser aren't holding the full dataset. For concurrent status updates, the real risk is two dispatchers updating the same shipment at once and one silently overwriting the other — I'd guard against that with optimistic concurrency control (a version number or updatedAt check on write, rejecting a stale update rather than my current transaction alone fully preventing it) rather than relying on database transactions by themselves. Separately, I'd introduce a read-through cache (Redis) in front of the list/search endpoints to absorb read load, since that's a distinct problem from the write-concurrency one above and shouldn't be conflated with it. Finally, since Prisma against a hosted Postgres instance opens a connection per client, I'd add connection pooling (PgBouncer, or Prisma Accelerate) once multiple backend instances are running concurrently, or the app will hit Postgres's connection limit well before it hits any real data-volume limit.
+
+Deployment
+Frontend: [live URL]
+Backend: [live URL]
